@@ -6,7 +6,8 @@ namespace MessageHub.Controllers;
 [Route("api/events")]
 public class EventsController : ControllerBase
 {
-    public ActionResult<Event> GetEvents()
+    [HttpGet]
+    public ActionResult<IEnumerable<Event>> GetEvents()
     {
         return new Event{
             "Prince Eduard School",
