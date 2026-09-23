@@ -21,3 +21,5 @@ TestResults/
 
 # NuGet
 *.nupkg
+
+firebase-service-account.json
