@@ -2,14 +2,13 @@ using Google.Cloud.Firestore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddSingleton<FirestoreDb>(sp =>
-{
+builder.Services.AddSingleton<FirestoreDb>(sp => {
     return FirestoreDb.Create("messagehub-aea2b");
 });
 
 // Add services to the container.
-
 builder.Services.AddControllers();
+
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 

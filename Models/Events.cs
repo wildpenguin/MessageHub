@@ -1,9 +1,22 @@
+using Google.Cloud.Firestore;
+
 namespace MessageHub.Models;
 
-public class Events
+[FirestoreData]
+public class Events: IFirestoreEntity
 {
-    public string? Id { get; set; }
-    public string Type { get; set; } = ""; // emergency, info
-    public string Title { get; set; } = "";
-    public string Text { get; set; } = "";
+    [FirestoreProperty]
+    public string Id { get; set; } = string.Empty;
+
+    [FirestoreProperty("eventType")]
+    public string? EventType { get; set; } 
+    
+    [FirestoreProperty("eventTitle")]
+    public string? EventTitle { get; set; }
+
+    [FirestoreProperty("eventText")]
+    public string? EventText { get; set; }
+
+    [FirestoreDocumentCreateTimestamp]
+    public Timestamp CreatedAt { get; set; }
 }

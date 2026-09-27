@@ -1,13 +1,19 @@
+using Google.Cloud.Firestore;
+
 namespace MessageHub.Models;
 
-public class Clients
+[FirestoreData]
+public class Clients: IFirestoreEntity
 {
-    public string? Id { get; set; }
-    
+    [FirestoreProperty]
+    public string Id { get; set; } = string.Empty;
+
+    [FirestoreProperty("name")]
     public string? Name { get; set; }
 
+    [FirestoreProperty("email")]
     public string? Email { get; set; }
 
+    [FirestoreProperty("phone")]
     public string? Phone { get; set; }
-    
 }
