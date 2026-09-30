@@ -5,7 +5,7 @@ namespace MessageHub.Models;
 [FirestoreData]
 public class Events: IFirestoreEntity
 {
-    [FirestoreProperty]
+    [FirestoreDocumentId]
     public string Id { get; set; } = string.Empty;
 
     [FirestoreProperty("eventType")]

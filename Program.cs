@@ -1,10 +1,15 @@
 using Google.Cloud.Firestore;
+using MessageHub.Repositories;
+using MessageHub.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddSingleton<FirestoreDb>(sp => {
     return FirestoreDb.Create("messagehub-aea2b");
 });
+
+builder.Services.AddScoped<IClientsRepository, ClientsRepository>();
+builder.Services.AddScoped<IClientsService, ClientsService>();
 
 // Add services to the container.
 builder.Services.AddControllers();

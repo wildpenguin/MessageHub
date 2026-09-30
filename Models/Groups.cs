@@ -6,7 +6,7 @@ namespace MessageHub.Models;
 [FirestoreData]
 public class Groups : IFirestoreEntity
 {
-    [FirestoreProperty]
+    [FirestoreDocumentId]
     public string Id {get; set; } = string.Empty;
     
     [FirestoreProperty("groupName")]

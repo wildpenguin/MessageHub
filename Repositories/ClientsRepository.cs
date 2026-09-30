@@ -19,6 +19,7 @@ public class ClientsRepository : FirestoreRepository<Clients>, IClientsRepositor
             .WhereEqualTo("name", name)
             .OrderBy("name");
         QuerySnapshot snapshot = await query.GetSnapshotAsync();
-        return snapshot.Documents.Select(d => d.ConvertTo<Clients>()).ToList();
+        
+        return [.. snapshot.Documents.Select(d => d.ConvertTo<Clients>())];
     }
 }
