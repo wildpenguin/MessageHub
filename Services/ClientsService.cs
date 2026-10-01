@@ -1,7 +1,7 @@
-namespace MessageHub.Services;
 
 using MessageHub.Dtos;
 using MessageHub.Repositories;
+namespace MessageHub.Services;
 
 public interface IClientsService
 {

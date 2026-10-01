@@ -1,4 +1,5 @@
 using Google.Cloud.Firestore;
+using MessageHub.Models;
 using MessageHub.Repositories;
 using MessageHub.Services;
 
@@ -10,6 +11,9 @@ builder.Services.AddSingleton<FirestoreDb>(sp => {
 
 builder.Services.AddScoped<IClientsRepository, ClientsRepository>();
 builder.Services.AddScoped<IClientsService, ClientsService>();
+
+builder.Services.AddScoped<IEventsRepository, EventsRepository>();
+builder.Services.AddScoped<IEventsService, EventsService>();
 
 // Add services to the container.
 builder.Services.AddControllers();

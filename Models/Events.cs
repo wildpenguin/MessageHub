@@ -9,13 +9,16 @@ public class Events: IFirestoreEntity
     public string Id { get; set; } = string.Empty;
 
     [FirestoreProperty("eventType")]
-    public string? EventType { get; set; } 
+    public string EventType { get; set; } = string.Empty;
     
     [FirestoreProperty("eventTitle")]
-    public string? EventTitle { get; set; }
+    public string EventTitle { get; set; } = string.Empty;
 
     [FirestoreProperty("eventText")]
-    public string? EventText { get; set; }
+    public string EventText { get; set; } = string.Empty;
+
+    [FirestoreProperty("groups")]
+    public List<string> Groups { get; set; } = new();
 
     [FirestoreDocumentCreateTimestamp]
     public Timestamp CreatedAt { get; set; }
