@@ -8,16 +8,16 @@ public class Groups : IFirestoreEntity
 {
     [FirestoreDocumentId]
     public string Id {get; set; } = string.Empty;
-    
+
     [FirestoreProperty("groupName")]
-    public string? GroupName { get; set; }
-    
+    public string GroupName { get; set; } = string.Empty;
+
     [FirestoreProperty("groupType")]
     public string? GroupType { get; set; }
-    
+
     [FirestoreProperty("groupColorCode")]
     public string? GroupColorCode { get; set; }
 
     [FirestoreProperty("members")]
-    public List<string> Members { get; set; } = new();
+    public List<string> Members { get; set; } = [];
 }

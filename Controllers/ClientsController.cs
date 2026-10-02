@@ -1,9 +1,11 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 using MessageHub.Dtos;
 using MessageHub.Services;
 
 [ApiController]
+[Authorize]
 [Route("api/clients")]
 public class ClientsController : ControllerBase
 {

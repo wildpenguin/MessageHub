@@ -9,14 +9,14 @@ public record EventsResponse(
     string EventTitle,
     string EventText,
     List<string> Groups,
-    DateTime createdAt
+    DateTime CreatedAt
 );
 
 public record CreateEventsRequest(
     [Required, StringLength(100)] string EventType,
     [Required, StringLength(100)] string EventTitle,
     [Required, StringLength(200)] string EventText,
-    [Required] List<string>? Groups
+    [Required] List<string> Groups
 );
 
 public static class EventsMappings
@@ -35,7 +35,7 @@ public static class EventsMappings
         EventType = r.EventType,
         EventTitle = r.EventTitle,
         EventText = r.EventText,
-        Groups = r.Groups ?? new()
+        Groups = r.Groups ?? []
     };
 
 }

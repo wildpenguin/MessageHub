@@ -1,8 +1,5 @@
-using Google.Cloud.Firestore.V1;
 using MessageHub.Dtos;
-using MessageHub.Models;
 using MessageHub.Repositories;
-using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace MessageHub.Services;
 
@@ -44,6 +41,4 @@ public class EventsService : IEventsService
     {
         return await _events.DeleteAsync(id);
     }
-
-
 }

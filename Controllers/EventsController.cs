@@ -1,15 +1,17 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 using MessageHub.Dtos;
 using MessageHub.Services;
 
 [ApiController]
+[Authorize]
 [Route("api/events")]
 public class EventsController : ControllerBase
 {
     private readonly IEventsService _service;
 
-    public EventsController(EventsService service) => _service = service;
+    public EventsController(IEventsService service) => _service = service;
 
     [HttpGet("{id}")]
     public async Task<ActionResult<EventsResponse>> Get(string id)

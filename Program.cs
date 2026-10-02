@@ -1,19 +1,42 @@
 using Google.Cloud.Firestore;
-using MessageHub.Models;
 using MessageHub.Repositories;
 using MessageHub.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
+var projectId = builder.Configuration["Firebase::ProjectId"]
+    ?? throw new InvalidOperationException("Firebase:ProjectId is not configured");
 
 builder.Services.AddSingleton<FirestoreDb>(sp => {
-    return FirestoreDb.Create("messagehub-aea2b");
+    return FirestoreDb.Create(projectId);
 });
+
+builder.Services
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.Authority = $"https://securetoken.google.com/{projectId}";
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidIssuer = $"https://securetoken.google.com/{projectId}",
+            ValidateAudience = true,
+            ValidAudience = projectId,
+            ValidateLifetime = true 
+        };
+    });
+
+builder.Services.AddAuthorization();
 
 builder.Services.AddScoped<IClientsRepository, ClientsRepository>();
 builder.Services.AddScoped<IClientsService, ClientsService>();
 
 builder.Services.AddScoped<IEventsRepository, EventsRepository>();
 builder.Services.AddScoped<IEventsService, EventsService>();
+
+builder.Services.AddScoped<IGroupsRepository, GroupsRepository>();
+builder.Services.AddScoped<IGroupsService, GroupsService>();
 
 // Add services to the container.
 builder.Services.AddControllers();
@@ -31,6 +54,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
