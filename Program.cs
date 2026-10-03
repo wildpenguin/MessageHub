@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
-var projectId = builder.Configuration["Firebase::ProjectId"]
+var projectId = builder.Configuration["Firebase:ProjectId"]
     ?? throw new InvalidOperationException("Firebase:ProjectId is not configured");
 
 builder.Services.AddSingleton<FirestoreDb>(sp => {
@@ -37,6 +37,8 @@ builder.Services.AddScoped<IEventsService, EventsService>();
 
 builder.Services.AddScoped<IGroupsRepository, GroupsRepository>();
 builder.Services.AddScoped<IGroupsService, GroupsService>();
+
+builder.Services.AddScoped<INotificationsRepository, NotificationsRepository>();
 
 // Add services to the container.
 builder.Services.AddControllers();

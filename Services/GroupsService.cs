@@ -10,13 +10,20 @@ public interface IGroupsService
     Task<GroupResponse> CreateAsync(CreateGroupRequest request);
     Task<bool> UpdateAsync(string id, UpdateGroupRequest request);
     Task<bool> DeleteAsync(string id);
+    Task<IReadOnlyList<ClientResponse>> GetGroupClientsAsync(IEnumerable<string> groupIds);
+
 }
 
 public class GroupsService : IGroupsService
 {
     private readonly IGroupsRepository _groups;
+    private readonly IClientsService _clients;
 
-    public GroupsService(IGroupsRepository groups) => _groups = groups;
+    public GroupsService(IGroupsRepository groups, IClientsService clients)
+    {
+        _groups = groups;
+        _clients = clients;
+    } 
 
     public async Task<GroupResponse?> GetAsync(string id)
     {
@@ -49,4 +56,27 @@ public class GroupsService : IGroupsService
 
     public async Task<bool> DeleteAsync(string id) =>
         await _groups.DeleteAsync(id);
+    
+    public async Task<IReadOnlyList<ClientResponse>> GetGroupClientsAsync(IEnumerable<string> groupIds)
+    {
+        var memberIds = new HashSet<string>();
+
+        foreach (var groupId in groupIds.Distinct())
+        {
+            var group = await _groups.GetByIdAsync(groupId);
+            if (group is null) continue;
+
+            memberIds.UnionWith(group.Members);
+        }
+
+        var clientsList = new List<ClientResponse>();
+
+        foreach (var m in memberIds) {
+            var getClient = await _clients.GetAsync(m);
+            if (getClient is null) continue;
+
+            clientsList.Add(getClient);
+        }
+        return clientsList;
+    } 
 }
