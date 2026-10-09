@@ -13,4 +13,12 @@
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.12" />
   </ItemGroup>
 
+  <PropertyGroup>
+    <DefaultItemExcludes>$(DefaultItemExcludes);Frontend/**</DefaultItemExcludes>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="Frontend/**" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

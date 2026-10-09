@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Groups · Message Hub</title>
+  <link rel="stylesheet" href="styles.css" />
+
+  <!-- React (UMD builds) and Babel, so JSX runs in the browser without a build step. -->
+  <script src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js" crossorigin></script>
+  <script src="https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7/babel.min.js"></script>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel" data-type="module" data-presets="react">
+    import { apiRequest, readSetting, TOKEN_KEY, Header, Footer } from "./shared.js";
+
+    const { useState, useEffect } = React;
+
+    const DEFAULT_COLOR = "#2f6fdf";
+
+    async function addGroup(token, group) {
+      return apiRequest(token, "/api/groups", {
+        method: "POST",
+        body: JSON.stringify({
+          groupName: group.groupName,
+          groupType: group.groupType || null,
+          groupColorCode: group.groupColorCode,
+          members: group.members,
+        }),
+      });
+    }
+
+    function memberNames(memberIds, clients) {
+      const names = memberIds.map(id => clients.find(c => c.id === id)?.name ?? "Unknown client");
+      if (names.length <= 4) return names.join(", ");
+      return `${names.slice(0, 4).join(", ")} and ${names.length - 4} more`;
+    }
+
+    function GroupsSection({ groups, clients }) {
+      return (
+        <section id="groups">
+          <h2>Groups</h2>
+          <p className="section-intro">Every event is delivered to the members of the groups it's sent to.</p>
+
+          {groups.length === 0 ? (
+            <p className="empty">No groups yet.</p>
+          ) : (
+            <div className="grid">
+              {groups.map(group => (
+                <article key={group.id} className="card group-card">
+                  <h3>
+                    <span className="swatch" style={{ background: group.groupColorCode || "transparent" }} />
+                    {group.groupName}
+                  </h3>
+                  <p className="meta">
+                    {group.groupType || "General"} · {group.members.length} {group.members.length === 1 ? "member" : "members"}
+                  </p>
+                  {group.members.length > 0 && <p className="meta">{memberNames(group.members, clients)}</p>}
+                </article>
+              ))}
+            </div>
+          )}
+        </section>
+      );
+    }
+
+    // Builds the member list on the page. Nothing is sent to the API until the group is created.
+    function MemberPicker({ clients, memberIds, onChange }) {
+      const [selectedId, setSelectedId] = useState("");
+
+      const available = clients.filter(c => !memberIds.includes(c.id));
+      const members = memberIds.map(id => clients.find(c => c.id === id)).filter(Boolean);
+
+      function addMember() {
+        if (!selectedId) return;
+        onChange([...memberIds, selectedId]);
+        setSelectedId("");
+      }
+
+      function removeMember(id) {
+        onChange(memberIds.filter(m => m !== id));
+      }
+
+      const placeholder = clients.length === 0 ? "No clients yet"
+        : available.length === 0 ? "All clients added"
+        : "Select a client…";
+
+      return (
+        <div className="full">
+          <label htmlFor="member">Members</label>
+          <div className="picker-row">
+            <select id="member" value={selectedId} disabled={available.length === 0}
+                    onChange={e => setSelectedId(e.target.value)}>
+              <option value="">{placeholder}</option>
+              {available.map(client => (
+                <option key={client.id} value={client.id}>
+                  {client.name}{client.email ? ` (${client.email})` : ""}
+                </option>
+              ))}
+            </select>
+            {/* type="button" so clicking Add doesn't submit the whole form */}
+            <button type="button" className="secondary" onClick={addMember} disabled={!selectedId}>Add</button>
+          </div>
+
+          {members.length === 0 ? (
+            <p className="meta" style={{ marginTop: 8 }}>No members added yet.</p>
+          ) : (
+            <ul className="chips">
+              {members.map(client => (
+                <li key={client.id} className="chip">
+                  {client.name}
+                  <button type="button" aria-label={`Remove ${client.name}`} onClick={() => removeMember(client.id)}>×</button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      );
+    }
+
+    function CreateGroupForm({ clients, onCreate }) {
+      const emptyForm = { groupName: "", groupType: "", groupColorCode: DEFAULT_COLOR, members: [] };
+      const [form, setForm] = useState(emptyForm);
+      const [status, setStatus] = useState(null);
+      const [submitting, setSubmitting] = useState(false);
+
+      const update = field => e => setForm({ ...form, [field]: e.target.value });
+
+      async function handleSubmit(e) {
+        e.preventDefault();
+
+        if (form.members.length === 0) {
+          setStatus({ type: "error", text: "Add at least one member before creating the group." });
+          return;
+        }
+
+        setSubmitting(true);
+        setStatus(null);
+
+        try {
+          await onCreate({
+            groupName: form.groupName.trim(),
+            groupType: form.groupType.trim(),
+            groupColorCode: form.groupColorCode,
+            members: form.members,
+          });
+          setForm(emptyForm);
+          setStatus({ type: "success", text: "Group created." });
+        } catch (err) {
+          setStatus({ type: "error", text: `Could not create the group: ${err.message}` });
+        } finally {
+          setSubmitting(false);
+        }
+      }
+
+      return (
+        <section id="new-group">
+          <h2>Create a group</h2>
+          <p className="section-intro">Name the group, add as many clients as you need, then create it.</p>
+
+          <form className="card event-form" onSubmit={handleSubmit}>
+            <div className="full">
+              <label htmlFor="groupName">Group name</label>
+              <input id="groupName" required maxLength={100} autoComplete="off"
+                     value={form.groupName} onChange={update("groupName")} placeholder="e.g. Volunteers" />
+            </div>
+
+            <div>
+              <label htmlFor="groupType">Type <span className="meta">(optional)</span></label>
+              <input id="groupType" maxLength={50} autoComplete="off"
+                     value={form.groupType} onChange={update("groupType")} placeholder="e.g. Community" />
+            </div>
+
+            <div>
+              <label htmlFor="groupColor">Colour</label>
+              <input id="groupColor" type="color" className="color-input"
+                     value={form.groupColorCode} onChange={update("groupColorCode")} />
+            </div>
+
+            <MemberPicker clients={clients} memberIds={form.members}
+                          onChange={members => setForm({ ...form, members })} />
+
+            <div className="full form-actions">
+              <button type="submit" disabled={submitting}>{submitting ? "Creating…" : "Create group"}</button>
+              {status && <span className={`status-${status.type}`} role="status">{status.text}</span>}
+            </div>
+          </form>
+        </section>
+      );
+    }
+
+    function App() {
+      const [token] = useState(() => readSetting(TOKEN_KEY, ""));
+      const [groups, setGroups] = useState([]);
+      const [clients, setClients] = useState([]);
+      const [message, setMessage] = useState(null);
+
+      useEffect(() => {
+        if (!token) {
+          setMessage("You're not logged in. Log in on the Events page first.");
+          return;
+        }
+
+        Promise.all([
+          apiRequest(token, "/api/groups"),
+          apiRequest(token, "/api/clients"),
+        ])
+          .then(([g, c]) => {
+            setGroups(g);
+            setClients(c);
+          })
+          .catch(err => setMessage(err.status === 401
+            ? "Your session expired. Log in again on the Events page."
+            : `Couldn't load groups (${err.message}).`));
+      }, [token]);
+
+      async function createGroup(group) {
+        const created = await addGroup(token, group);
+        if (created) setGroups(prev => [...prev, created]);
+      }
+
+      return (
+        <>
+          <Header />
+          <main className="container">
+            {message && <div className="banner">{message} <a href="index.html">Go to login</a></div>}
+            <GroupsSection groups={groups} clients={clients} />
+            <CreateGroupForm clients={clients} onCreate={createGroup} />
+          </main>
+          <Footer />
+        </>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+  </script>
+</body>
+</html>

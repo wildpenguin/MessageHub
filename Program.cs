@@ -4,7 +4,12 @@ using MessageHub.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 
-var builder = WebApplication.CreateBuilder(args);
+var builder = WebApplication.CreateBuilder(new WebApplicationOptions
+{
+    Args = args,
+    WebRootPath = "Frontend"
+});
+
 var projectId = builder.Configuration["Firebase:ProjectId"]
     ?? throw new InvalidOperationException("Firebase:ProjectId is not configured");
 
@@ -55,6 +60,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseDefaultFiles();
+app.UseStaticFiles();
 
 app.UseAuthentication();
 app.UseAuthorization();

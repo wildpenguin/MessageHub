@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Clients · Message Hub</title>
+  <link rel="stylesheet" href="styles.css" />
+
+  <!-- React (UMD builds) and Babel, so JSX runs in the browser without a build step. -->
+  <script src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js" crossorigin></script>
+  <script src="https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7/babel.min.js"></script>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel" data-type="module" data-presets="react">
+    import { apiRequest, readSetting, TOKEN_KEY, Header, Footer } from "./shared.js";
+
+    const { useState, useEffect } = React;
+
+
+    async function addClient(token, client) {
+      await apiRequest(token, "/api/clients", {
+        method: "POST",
+        body: JSON.stringify({
+          name: client.name,
+          email: client.email,
+          phone: client.phone
+        })
+      })
+    }
+
+    function ClientsSection({ clients }) {
+      return (
+        <section id="clients">
+          <h2>Clients</h2>
+          <p className="section-intro">People who receive event messages. Add them to groups to include them in events.</p>
+
+          {clients.length === 0 ? (
+            <p className="empty">No clients yet.</p>
+          ) : (
+            <div className="grid">
+              {clients.map(client => (
+                <article key={client.id} className="card">
+                  <h3 style={{ margin: "0 0 4px", fontSize: "1.05rem" }}>{client.name}</h3>
+                  <p className="meta">{client.email || "No email"}</p>
+                  <p className="meta">{client.phone || "No phone"}</p>
+                </article>
+              ))}
+            </div>
+          )}
+        </section>
+      );
+    }
+
+    function CreateClientForm({ onCreate }) {
+      const emptyForm = { name: "", email: "", phone: "" };
+      const [form, setForm] = useState(emptyForm);
+      const [status, setStatus] = useState(null);
+      const [submitting, setSubmitting] = useState(false);
+
+      const update = field => e => setForm({ ...form, [field]: e.target.value });
+
+      async function handleSubmit(e) {
+        e.preventDefault();
+        setSubmitting(true);
+        setStatus(null);
+
+        try {
+          await onCreate({
+            name: form.name.trim(),
+            email: form.email.trim(),
+            phone: form.phone.trim(),
+          });
+          setForm(emptyForm);
+          setStatus({ type: "success", text: "Client added." });
+        } catch (err) {
+          setStatus({ type: "error", text: `Could not add the client: ${err.message}` });
+        } finally {
+          setSubmitting(false);
+        }
+      }
+
+      return (
+        <section id="new-client">
+          <h2>Add a client</h2>
+          <p className="section-intro">Events are sent to the client's email and phone.</p>
+
+          <form className="card event-form" onSubmit={handleSubmit}>
+            <div className="full">
+              <label htmlFor="name">Name</label>
+              <input id="name" required maxLength={100} autoComplete="off"
+                     value={form.name} onChange={update("name")} placeholder="e.g. Jane Doe" />
+            </div>
+
+            <div>
+              <label htmlFor="email">Email</label>
+              <input id="email" type="email" required autoComplete="off"
+                     value={form.email} onChange={update("email")} placeholder="jane.doe@example.com" />
+            </div>
+
+            <div>
+              <label htmlFor="phone">Phone</label>
+              <input id="phone" type="tel" required autoComplete="off"
+                     value={form.phone} onChange={update("phone")} placeholder="+1 555 123 4567" />
+            </div>
+
+            <div className="full form-actions">
+              <button type="submit" disabled={submitting}>{submitting ? "Adding…" : "Add client"}</button>
+              {status && <span className={`status-${status.type}`} role="status">{status.text}</span>}
+            </div>
+          </form>
+        </section>
+      );
+    }
+
+    function App() {
+      const [token] = useState(() => readSetting(TOKEN_KEY, ""));
+      const [clients, setClients] = useState([]);
+      const [message, setMessage] = useState(null);
+
+      useEffect(() => {
+        if (!token) {
+          setMessage("You're not logged in. Log in on the Events page first.");
+          return;
+        }
+
+        apiRequest(token, "/api/clients")
+          .then(setClients)
+          .catch(err => setMessage(err.status === 401
+            ? "Your session expired. Log in again on the Events page."
+            : `Couldn't load clients (${err.message}).`));
+      }, [token]);
+
+      async function createClient(client) {
+        const created = await addClient(token, client);
+        if (created) setClients(prev => [...prev, created]);
+      }
+
+      return (
+        <>
+          <Header />
+          <main className="container">
+            {message && <div className="banner">{message} <a href="index.html">Go to login</a></div>}
+            <ClientsSection clients={clients} />
+            <CreateClientForm onCreate={createClient} />
+          </main>
+          <Footer />
+        </>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+  </script>
+</body>
+</html>
